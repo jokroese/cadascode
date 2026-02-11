@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+
+      - name: Install Node and Python via mise
+        run: mise install
+
+      - name: Install JS dependencies
+        run: pnpm -w install --frozen-lockfile
+
+      - name: JS checks
+        run: |
+          pnpm -w run check
+          pnpm -w run typecheck
+          pnpm -w run test
+
+      - name: Install Python dependencies
+        working-directory: apps/api
+        run: uv sync --frozen
+
+      - name: Python checks
+        working-directory: apps/api
+        run: |
+          uv run ruff check
+          uv run ruff format --check
+          uv run pyright
+          uv run pytest
+

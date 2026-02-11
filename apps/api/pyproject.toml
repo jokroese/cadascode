@@ -1,0 +1,18 @@
+[project]
+name = "cadascode-api"
+version = "0.1.0"
+description = "CadQuery execution and glTF/GLB export API for Cadascode"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastapi",
+  "uvicorn[standard]",
+  "cadquery",
+  "ocp-tessellate",
+  "pydantic",
+  "pytest",
+  "ruff",
+  "pyright",
+]
+
+[dependency-groups]
+dev = ["pytest"]

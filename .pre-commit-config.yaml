@@ -1,0 +1,38 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.6
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^apps/api/
+      - id: ruff-format
+        files: ^apps/api/
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.9.6
+    hooks:
+      - id: ruff
+        name: ruff-check
+        args: [--no-fix]
+        files: ^apps/api/
+
+  - repo: local
+    hooks:
+      - id: biome-check
+        name: biome-check
+        entry: pnpm biome check
+        language: system
+        pass_filenames: false
+        files: ^apps/web/
+      - id: svelte-check
+        name: svelte-check
+        entry: pnpm --filter web run check
+        language: system
+        pass_filenames: false
+      - id: pyright
+        name: pyright
+        entry: uv run pyright
+        language: system
+        pass_filenames: false
+        files: ^apps/api/
+
