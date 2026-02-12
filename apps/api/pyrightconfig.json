@@ -3,6 +3,7 @@
   "pythonVersion": "3.12",
   "include": ["app", "tests"],
   "typeCheckingMode": "strict",
+  "stubPath": "typings",
   "venvPath": ".",
   "venv": ".venv",
   "reportMissingImports": true

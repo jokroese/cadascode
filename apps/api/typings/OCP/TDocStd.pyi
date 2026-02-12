@@ -1,0 +1,6 @@
+from typing import Any
+
+class TDocStd_Document:
+    def __init__(self, name: Any) -> None: ...
+    def Main(self) -> Any: ...
+

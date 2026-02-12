@@ -1,0 +1,5 @@
+
+
+class TColStd_IndexedDataMapOfStringString:
+    def __init__(self) -> None: ...
+

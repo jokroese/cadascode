@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from .models import ErrorInfo, RunRequest, RunResponse
+from .occt_export import ExportError, export_glb_from_shape
 
 ARTIFACTS_ROOT = Path(os.getenv("CADASCODE_ARTIFACTS_DIR", "artifacts")).resolve()
 
@@ -39,24 +40,31 @@ def _ensure_artifact_dir(run_id: str) -> Path:
     return directory
 
 
-def _write_placeholder_glb(path: Path) -> None:
-    """TEMP: write a tiny placeholder GLB; to be replaced by real export."""
-    # A real implementation will use OCC's RWGltf tooling or ocp-tessellate.
-    # For now, write a small marker so clients can at least fetch a non-empty file.
-    path.write_bytes(b"CADASC0DE_PLACEHOLDER_GLB")
+def _build_shape_from_params(params: Mapping[str, Any]) -> Any:
+    """
+    Temporary hard-coded CadQuery model for v0 CadQuery → viewer wiring.
+
+    This will be replaced in a later step by executing user-provided CadQuery
+    code (via a build(params) function) once Monaco is wired in.
+    """
+    import cadquery as cq
+
+    size = float(params.get("size", 10.0))
+    # Numeric values are treated as millimetres end-to-end.
+    wp = cq.Workplane("XY").box(size, size, size)
+    return wp.val()
 
 
 def execute_run(request: RunRequest) -> RunResponse:
     """
     Execute a CadQuery run request.
 
-    V0 implementation:
+    Phase 3a implementation:
     - Computes deterministic run_id.
     - If artifact exists, short-circuits.
-    - Otherwise, writes a placeholder GLB file.
-
-    NOTE: This is intentionally minimal — the actual CadQuery execution and
-    glTF/GLB export pipeline will be wired in later.
+    - Otherwise, builds a hard-coded CadQuery model and exports it to GLB
+      using OCCT's RWGltf_CafWriter, producing exactly one artefact:
+      'model.glb'.
     """
     run_id = _compute_run_id(request.code, request.params)
     artifact_path = artifact_path_for(run_id)
@@ -70,12 +78,23 @@ def execute_run(request: RunRequest) -> RunResponse:
             )
 
         _ensure_artifact_dir(run_id)
-        _write_placeholder_glb(artifact_path)
+        shape = _build_shape_from_params(request.params)
+        export_glb_from_shape(shape=shape, path=artifact_path)
 
         return RunResponse(
             run_id=run_id,
             status="ok",
             glb_url=f"/api/artifacts/{run_id}/model.glb",
+        )
+    except ExportError as exc:
+        return RunResponse(
+            run_id=run_id,
+            status="error",
+            error=ErrorInfo(
+                type="export",
+                message=str(exc),
+                traceback=None,
+            ),
         )
     except Exception as exc:  # pragma: no cover - defensive catch-all
         return RunResponse(
@@ -87,4 +106,3 @@ def execute_run(request: RunRequest) -> RunResponse:
                 traceback=None,
             ),
         )
-

@@ -26,7 +26,9 @@ def test_execute_run_creates_artifact_and_is_deterministic(tmp_path: Path) -> No
 
         artifact = executor.artifact_path_for(response1.run_id)
         assert artifact.is_file()
-        assert artifact.read_bytes()  # non-empty placeholder
+        data = artifact.read_bytes()
+        # glTF binary header magic
+        assert data[:4] == b"glTF"
     finally:
         executor.ARTIFACTS_ROOT = original_root
 
