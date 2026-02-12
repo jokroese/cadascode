@@ -61,3 +61,8 @@ pnpm-debug.log*
 # Lockfiles (we commit these)
 # pnpm-lock.yaml
 # uv.lock
+
+.cache/
+.local/
+.pnpm-store/
+.npm/
