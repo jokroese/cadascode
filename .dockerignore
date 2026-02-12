@@ -1,0 +1,24 @@
+# Dependencies and caches (reinstalled in container)
+node_modules
+.pnpm-store
+.venv
+__pycache__
+.pytest_cache
+.ruff_cache
+
+# Git and IDE
+.git
+.github
+.vscode
+.idea
+
+# Python app (only needed for api build)
+apps/api
+
+# Build outputs and env
+.svelte-kit
+.output
+.env
+.env.*
+*.log
+.DS_Store

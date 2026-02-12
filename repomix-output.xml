@@ -1,0 +1,795 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.github/
+  workflows/
+    ci.yml
+apps/
+  api/
+    app/
+      __init__.py
+      main.py
+    tests/
+      test_health.py
+    .dockerignore
+    Dockerfile
+    pyproject.toml
+    pyrightconfig.json
+    ruff.toml
+  web/
+    src/
+      lib/
+        assets/
+          favicon.svg
+        example.test.ts
+        index.ts
+      routes/
+        +layout.svelte
+        +page.svelte
+      app.d.ts
+      app.html
+    static/
+      robots.txt
+    .gitignore
+    .npmrc
+    Dockerfile
+    package.json
+    README.md
+    svelte.config.js
+    tsconfig.json
+    vite.config.ts
+.dockerignore
+.gitignore
+.npmrc
+.pre-commit-config.yaml
+biome.jsonc
+compose.yml
+mise.toml
+package.json
+pnpm-workspace.yaml
+tsconfig.base.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="apps/api/.dockerignore">
+.venv
+__pycache__
+.pytest_cache
+.ruff_cache
+*.pyc
+.git
+.gitignore
+*.md
+</file>
+
+<file path="apps/api/Dockerfile">
+# Build context: apps/api
+FROM python:3.12-slim AS base
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+WORKDIR /app
+
+# Copy project files and install dependencies
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
+
+# Copy app code (for image; overwritten by volume in dev)
+COPY . .
+
+# Non-root user for dev (avoids permission issues on mounted volumes)
+RUN groupadd -g 1000 app && useradd -u 1000 -g app -m app
+RUN chown -R app:app /app
+USER app
+
+EXPOSE 8000
+
+# Sync on start when volume overwrites; then run uvicorn with reload
+CMD ["sh", "-c", "uv sync --frozen && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"]
+</file>
+
+<file path="apps/web/Dockerfile">
+# Build context: repo root (dockerfile: apps/web/Dockerfile)
+FROM node:24-alpine AS base
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@10.0.0 --activate
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+WORKDIR /app
+
+# Copy workspace root and web app for install
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY apps/web apps/web
+
+# Install with frozen lockfile (reproducible)
+RUN pnpm install --frozen-lockfile
+
+# Non-root user for dev (avoids permission issues on mounted volumes)
+RUN addgroup -g 1000 app && adduser -u 1000 -G app -D app
+RUN chown -R app:app /app
+USER app
+
+EXPOSE 5173
+
+# Install on start when volume overwrites files; then run dev
+CMD ["sh", "-c", "pnpm install --frozen-lockfile && pnpm --filter web dev --host 0.0.0.0"]
+</file>
+
+<file path=".dockerignore">
+# Dependencies and caches (reinstalled in container)
+node_modules
+.pnpm-store
+.venv
+__pycache__
+.pytest_cache
+.ruff_cache
+
+# Git and IDE
+.git
+.github
+.vscode
+.idea
+
+# Python app (only needed for api build)
+apps/api
+
+# Build outputs and env
+.svelte-kit
+.output
+.env
+.env.*
+*.log
+.DS_Store
+</file>
+
+<file path="compose.yml">
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+    environment:
+      - NODE_ENV=development
+      - API_PROXY_TARGET=http://api:8000
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/api:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+</file>
+
+<file path=".github/workflows/ci.yml">
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+
+      - name: Install Node and Python via mise
+        run: mise install
+
+      - name: Install JS dependencies
+        run: pnpm -w install --frozen-lockfile
+
+      - name: JS checks
+        run: |
+          pnpm -w run check
+          pnpm -w run typecheck
+          pnpm -w run test
+
+      - name: Install Python dependencies
+        working-directory: apps/api
+        run: uv sync --frozen
+
+      - name: Python checks
+        working-directory: apps/api
+        run: |
+          uv run ruff check
+          uv run ruff format --check
+          uv run pyright
+          uv run pytest
+</file>
+
+<file path="apps/api/app/__init__.py">
+"""Cadascode API package."""
+</file>
+
+<file path="apps/api/app/main.py">
+from fastapi import FastAPI
+
+app = FastAPI(title="Cadascode API", version="0.1.0")
+
+
+@app.get("/api/health")
+def health() -> dict[str, str]:
+    """Simple health endpoint for smoke tests."""
+    return {"status": "ok"}
+</file>
+
+<file path="apps/api/tests/test_health.py">
+from importlib import util as import_util
+from pathlib import Path
+from types import ModuleType
+
+
+def test_health_import() -> None:
+    """Smoke test: FastAPI app module can be imported from file path."""
+    main_path = Path(__file__).parent.parent / "app" / "main.py"
+    spec = import_util.spec_from_file_location("app.main", main_path)
+    assert spec is not None
+    module = import_util.module_from_spec(spec)
+    assert isinstance(module, ModuleType)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    assert hasattr(module, "app")
+</file>
+
+<file path="apps/api/pyproject.toml">
+[project]
+name = "cadascode-api"
+version = "0.1.0"
+description = "CadQuery execution and glTF/GLB export API for Cadascode"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastapi",
+  "uvicorn[standard]",
+  "cadquery",
+  "ocp-tessellate",
+  "pydantic",
+  "pytest",
+  "ruff",
+  "pyright",
+]
+
+[dependency-groups]
+dev = ["pytest"]
+</file>
+
+<file path="apps/api/pyrightconfig.json">
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/pyright/main/packages/pyright-internal/schemas/pyrightconfig.schema.json",
+  "pythonVersion": "3.12",
+  "include": ["app", "tests"],
+  "typeCheckingMode": "strict",
+  "venvPath": ".",
+  "venv": ".venv",
+  "reportMissingImports": true
+}
+</file>
+
+<file path="apps/api/ruff.toml">
+line-length = 100
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "I", "B"]
+ignore = []
+
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+</file>
+
+<file path="apps/web/src/lib/assets/favicon.svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="107" height="128" viewBox="0 0 107 128"><title>svelte-logo</title><path d="M94.157 22.819c-10.4-14.885-30.94-19.297-45.792-9.835L22.282 29.608A29.92 29.92 0 0 0 8.764 49.65a31.5 31.5 0 0 0 3.108 20.231 30 30 0 0 0-4.477 11.183 31.9 31.9 0 0 0 5.448 24.116c10.402 14.887 30.942 19.297 45.791 9.835l26.083-16.624A29.92 29.92 0 0 0 98.235 78.35a31.53 31.53 0 0 0-3.105-20.232 30 30 0 0 0 4.474-11.182 31.88 31.88 0 0 0-5.447-24.116" style="fill:#ff3e00"/><path d="M45.817 106.582a20.72 20.72 0 0 1-22.237-8.243 19.17 19.17 0 0 1-3.277-14.503 18 18 0 0 1 .624-2.435l.49-1.498 1.337.981a33.6 33.6 0 0 0 10.203 5.098l.97.294-.09.968a5.85 5.85 0 0 0 1.052 3.878 6.24 6.24 0 0 0 6.695 2.485 5.8 5.8 0 0 0 1.603-.704L69.27 76.28a5.43 5.43 0 0 0 2.45-3.631 5.8 5.8 0 0 0-.987-4.371 6.24 6.24 0 0 0-6.698-2.487 5.7 5.7 0 0 0-1.6.704l-9.953 6.345a19 19 0 0 1-5.296 2.326 20.72 20.72 0 0 1-22.237-8.243 19.17 19.17 0 0 1-3.277-14.502 17.99 17.99 0 0 1 8.13-12.052l26.081-16.623a19 19 0 0 1 5.3-2.329 20.72 20.72 0 0 1 22.237 8.243 19.17 19.17 0 0 1 3.277 14.503 18 18 0 0 1-.624 2.435l-.49 1.498-1.337-.98a33.6 33.6 0 0 0-10.203-5.1l-.97-.294.09-.968a5.86 5.86 0 0 0-1.052-3.878 6.24 6.24 0 0 0-6.696-2.485 5.8 5.8 0 0 0-1.602.704L37.73 51.72a5.42 5.42 0 0 0-2.449 3.63 5.79 5.79 0 0 0 .986 4.372 6.24 6.24 0 0 0 6.698 2.486 5.8 5.8 0 0 0 1.602-.704l9.952-6.342a19 19 0 0 1 5.295-2.328 20.72 20.72 0 0 1 22.237 8.242 19.17 19.17 0 0 1 3.277 14.503 18 18 0 0 1-8.13 12.053l-26.081 16.622a19 19 0 0 1-5.3 2.328" style="fill:#fff"/></svg>
+</file>
+
+<file path="apps/web/src/lib/example.test.ts">
+import { describe, expect, it } from 'vitest';
+
+describe('example test', () => {
+	it('adds correctly', () => {
+		expect(1 + 1).toBe(2);
+	});
+});
+</file>
+
+<file path="apps/web/src/lib/index.ts">
+// place files you want to import through the `$lib` alias in this folder.
+</file>
+
+<file path="apps/web/src/routes/+layout.svelte">
+<svelte:options runes={true} />
+
+<script lang="ts">
+	import favicon from '$lib/assets/favicon.svg';
+
+	let { children } = $props();
+</script>
+
+<svelte:head>
+	<link rel="icon" href={favicon} />
+</svelte:head>
+
+{@render children()}
+</file>
+
+<file path="apps/web/src/routes/+page.svelte">
+<svelte:options runes={true} />
+
+<h1>Welcome to SvelteKit</h1>
+<p>
+	Visit
+	<a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a>
+	to read the documentation
+</p>
+</file>
+
+<file path="apps/web/src/app.d.ts">
+// See https://svelte.dev/docs/kit/types#app.d.ts
+// for information about these interfaces
+declare global {
+	namespace App {
+		// interface Error {}
+		// interface Locals {}
+		// interface PageData {}
+		// interface PageState {}
+		// interface Platform {}
+	}
+}
+
+export {};
+</file>
+
+<file path="apps/web/src/app.html">
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>
+</file>
+
+<file path="apps/web/static/robots.txt">
+# allow crawling everything by default
+User-agent: *
+Disallow:
+</file>
+
+<file path="apps/web/.gitignore">
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+</file>
+
+<file path="apps/web/.npmrc">
+engine-strict=true
+</file>
+
+<file path="apps/web/package.json">
+{
+	"name": "web",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"test": "vitest",
+		"test:watch": "vitest --watch"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "^7.0.0",
+		"@sveltejs/kit": "^2.50.2",
+		"@sveltejs/vite-plugin-svelte": "^6.2.4",
+		"@testing-library/jest-dom": "^6.9.1",
+		"@testing-library/svelte": "^5.3.1",
+		"@types/node": "^25.2.3",
+		"@vitest/coverage-v8": "^4.0.18",
+		"@vitest/ui": "^4.0.18",
+		"jsdom": "^28.0.0",
+		"svelte": "^5.49.2",
+		"svelte-check": "^4.3.6",
+		"typescript": "^5.9.3",
+		"vite": "^7.3.1",
+		"vitest": "^4.0.18"
+	},
+	"dependencies": {
+		"monaco-editor": "0.55.1"
+	}
+}
+</file>
+
+<file path="apps/web/README.md">
+# sv
+
+Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+
+## Creating a project
+
+If you're seeing this, you've probably already done this step. Congrats!
+
+```sh
+# create a new project
+npx sv create my-app
+```
+
+To recreate this project with the same configuration:
+
+```sh
+# recreate this project
+pnpm dlx sv create --template minimal --types ts --install pnpm apps/web
+```
+
+## Developing
+
+Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+
+```sh
+npm run dev
+
+# or start the server and open the app in a new browser tab
+npm run dev -- --open
+```
+
+## Building
+
+To create a production version of your app:
+
+```sh
+npm run build
+```
+
+You can preview the production build with `npm run preview`.
+
+> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+</file>
+
+<file path="apps/web/svelte.config.js">
+import adapter from '@sveltejs/adapter-auto';
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	kit: {
+		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
+		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
+		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
+		adapter: adapter()
+	}
+};
+
+export default config;
+</file>
+
+<file path="apps/web/tsconfig.json">
+{
+	"extends": "./.svelte-kit/tsconfig.json",
+	"compilerOptions": {
+		"rewriteRelativeImportExtensions": true,
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"moduleResolution": "bundler"
+	}
+	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
+	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
+	//
+	// To make changes to top-level options such as include and exclude, we recommend extending
+	// the generated config; see https://svelte.dev/docs/kit/configuration#typescript
+}
+</file>
+
+<file path="apps/web/vite.config.ts">
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+	plugins: [sveltekit()],
+	server: {
+		proxy: {
+			// Browser calls /api/* on this server; in Docker proxy to api container, else localhost
+			'/api': {
+				target: process.env.API_PROXY_TARGET ?? 'http://localhost:8000',
+				changeOrigin: true
+			}
+		}
+	}
+});
+</file>
+
+<file path=".gitignore">
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+dist/
+build/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.ruff_cache/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# SvelteKit
+.svelte-kit/
+.output/
+.vercel/
+.netlify/
+.wrangler/
+
+# Build outputs
+/build
+/dist
+
+# Lockfiles (we commit these)
+# pnpm-lock.yaml
+# uv.lock
+</file>
+
+<file path=".npmrc">
+strict-peer-dependencies=true
+shamefully-hoist=false
+prefer-frozen-lockfile=true
+</file>
+
+<file path=".pre-commit-config.yaml">
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.6
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^apps/api/
+      - id: ruff-format
+        files: ^apps/api/
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.9.6
+    hooks:
+      - id: ruff
+        name: ruff-check
+        args: [--no-fix]
+        files: ^apps/api/
+
+  - repo: local
+    hooks:
+      - id: biome-check
+        name: biome-check
+        entry: pnpm biome check
+        language: system
+        pass_filenames: false
+        files: ^apps/web/
+      - id: svelte-check
+        name: svelte-check
+        entry: pnpm --filter web run check
+        language: system
+        pass_filenames: false
+      - id: pyright
+        name: pyright
+        entry: uv run pyright
+        language: system
+        pass_filenames: false
+        files: ^apps/api/
+</file>
+
+<file path="biome.jsonc">
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.14/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "files": {
+    "includes": ["**", "!!anything_we_dont_want_included"]
+  },
+  "formatter": {
+    "enabled": true
+  },
+  "linter": {
+    "enabled": true
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.svelte"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedVariables": "off",
+            "noUnusedImports": "off"
+          }
+        }
+      }
+    }
+  ]
+}
+</file>
+
+<file path="mise.toml">
+[tools]
+node = "24"
+pnpm = "10"
+</file>
+
+<file path="package.json">
+{
+  "name": "cadascode",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "check": "pnpm -r run check",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "dev:docker": "docker compose up --build"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
+</file>
+
+<file path="pnpm-workspace.yaml">
+packages:
+  - "apps/*"
+</file>
+
+<file path="tsconfig.base.json">
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowJs": false,
+    "allowImportingTsExtensions": true,
+    "importsNotUsedAsValues": "error",
+    "isolatedModules": true,
+    "types": []
+  }
+}
+</file>
+
+</files>

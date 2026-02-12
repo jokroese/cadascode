@@ -1,6 +1,14 @@
 version = 1
 revision = 3
 requires-python = "==3.12.*"
+resolution-markers = [
+    "platform_machine != 'aarch64' or sys_platform != 'linux'",
+    "platform_machine == 'aarch64' and sys_platform == 'linux'",
+]
+required-markers = [
+    "platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "platform_machine == 'x86_64' and sys_platform == 'linux'",
+]
 
 [[package]]
 name = "aiohappyeyeballs"
@@ -16,13 +24,13 @@ name = "aiohttp"
 version = "3.13.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "aiohappyeyeballs" },
-    { name = "aiosignal" },
-    { name = "attrs" },
-    { name = "frozenlist" },
-    { name = "multidict" },
-    { name = "propcache" },
-    { name = "yarl" },
+    { name = "aiohappyeyeballs", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "aiosignal", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "attrs", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "frozenlist", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "multidict", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "propcache", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "yarl", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/50/42/32cf8e7704ceb4481406eb87161349abb46a57fee3f008ba9cb610968646/aiohttp-3.13.3.tar.gz", hash = "sha256:a949eee43d3782f2daae4f4a2819b2cb9b0c5d3b7f7a927067cc84dafdbb9f88", size = 7844556, upload-time = "2026-01-03T17:33:05.204Z" }
 wheels = [
@@ -50,8 +58,8 @@ name = "aiosignal"
 version = "1.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "frozenlist" },
-    { name = "typing-extensions" },
+    { name = "frozenlist", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "typing-extensions", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/61/62/06741b579156360248d1ec624842ad0edf697050bbaf7c3e46394e106ad1/aiosignal-1.4.0.tar.gz", hash = "sha256:f47eecd9468083c2029cc99945502cb7708b082c232f9aca65da147157b251c7", size = 25007, upload-time = "2025-07-03T22:54:43.528Z" }
 wheels = [
@@ -112,7 +120,8 @@ name = "cadascode-api"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "cadquery" },
+    { name = "cadquery", version = "2.3.0", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine == 'aarch64' and sys_platform == 'linux'" },
+    { name = "cadquery", version = "2.6.1", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
     { name = "fastapi" },
     { name = "ocp-tessellate" },
     { name = "pydantic" },
@@ -144,18 +153,33 @@ dev = [{ name = "pytest" }]
 
 [[package]]
 name = "cadquery"
+version = "2.3.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "platform_machine == 'aarch64' and sys_platform == 'linux'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/01/40/0c61f506eeeb91849a0da665609a51ff97b79ab60b6d2081a21a95f7fd02/cadquery-2.3.0.tar.gz", hash = "sha256:0394300006ccf2644f22b8650609fd7966686781c030592346626df9e00bd2b0", size = 2897953, upload-time = "2023-06-27T20:35:28.643Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e2/bd/0b9914104b9a6e9fd75566c993ed6e97767735acffbab6997a29c3fd94c3/cadquery-2.3.0-py3-none-any.whl", hash = "sha256:f03076ed775934bca97dcca7c110980513fab591d2420137300a5db1f261740f", size = 145753, upload-time = "2023-06-27T20:35:26.816Z" },
+]
+
+[[package]]
+name = "cadquery"
 version = "2.6.1"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "platform_machine != 'aarch64' or sys_platform != 'linux'",
+]
 dependencies = [
-    { name = "cadquery-ocp" },
-    { name = "casadi" },
-    { name = "ezdxf" },
-    { name = "multimethod" },
-    { name = "nlopt" },
-    { name = "path" },
-    { name = "trame" },
-    { name = "trame-vtk" },
-    { name = "typish" },
+    { name = "cadquery-ocp", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "casadi", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "ezdxf", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "multimethod", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "nlopt", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "path", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "trame", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "trame-vtk", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "typish", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c1/03/6fb5f4f980c791c20ced03d265eeab1339cdf91986eb5a8224992855c8c7/cadquery-2.6.1.tar.gz", hash = "sha256:285ec7d6b290d326b291daa024f79265604eff82beec024c46b6378a8396fa4b", size = 264955, upload-time = "2025-10-28T20:05:32.548Z" }
 wheels = [
@@ -167,7 +191,7 @@ name = "cadquery-ocp"
 version = "7.8.1.1.post1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "vtk" },
+    { name = "vtk", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3a/98/7b81196dd990bfbbdeff7858db7d319dede6fef2fb6c153ede9eb409a9e9/cadquery_ocp-7.8.1.1.post1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:0022e854a3840efd5c7fc14fe933772613794777d5eb056a4754d44a86baf02a", size = 68590290, upload-time = "2025-01-29T14:34:16.804Z" },
@@ -181,7 +205,7 @@ name = "casadi"
 version = "3.7.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
+    { name = "numpy", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/92/62/1e98662024915ecb09c6894c26a3f497f4afa66570af3f53db4651fc45f1/casadi-3.7.2.tar.gz", hash = "sha256:b4d7bd8acdc4180306903ae1c9eddaf41be2a3ae2fa7154c57174ae64acdc60d", size = 6053600, upload-time = "2025-09-10T10:05:49.521Z" }
 wheels = [
@@ -219,7 +243,7 @@ name = "contourpy"
 version = "1.3.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
+    { name = "numpy", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/58/01/1253e6698a07380cd31a736d248a3f2a50a7c88779a1813da27503cadc2a/contourpy-1.3.3.tar.gz", hash = "sha256:083e12155b210502d0bca491432bb04d56dc3432f95a979b429f2848c3dbe880", size = 13466174, upload-time = "2025-07-26T12:03:12.549Z" }
 wheels = [
@@ -250,10 +274,10 @@ name = "ezdxf"
 version = "1.4.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "fonttools" },
-    { name = "numpy" },
-    { name = "pyparsing" },
-    { name = "typing-extensions" },
+    { name = "fonttools", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "numpy", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "pyparsing", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "typing-extensions", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/6d/ff/e2fea17633a4c04abdf260d53e0d67463b01e11d957b8faaf3b195666e10/ezdxf-1.4.3.tar.gz", hash = "sha256:403adf7ce305877f6c9f3c007fe2e5c5df504dfb797032122abedd7170176764", size = 1816226, upload-time = "2025-10-19T03:48:12.137Z" }
 wheels = [
@@ -403,15 +427,15 @@ name = "matplotlib"
 version = "3.10.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "contourpy" },
-    { name = "cycler" },
-    { name = "fonttools" },
-    { name = "kiwisolver" },
-    { name = "numpy" },
-    { name = "packaging" },
-    { name = "pillow" },
-    { name = "pyparsing" },
-    { name = "python-dateutil" },
+    { name = "contourpy", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "cycler", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "fonttools", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "kiwisolver", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "numpy", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "packaging", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "pillow", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "pyparsing", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "python-dateutil", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/8a/76/d3c6e3a13fe484ebe7718d14e269c9569c4eb0020a968a327acb3b9a8fe6/matplotlib-3.10.8.tar.gz", hash = "sha256:2299372c19d56bcd35cf05a2738308758d32b9eaed2371898d8f5bd33f084aa3", size = 34806269, upload-time = "2025-12-10T22:56:51.155Z" }
 wheels = [
@@ -491,7 +515,7 @@ name = "nlopt"
 version = "2.10.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
+    { name = "numpy", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a4/39/76558756c758962fcf2c6f8450384e43a8e65cb8dfbb8a93d40014b09b3a/nlopt-2.10.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:19e7a5dd823eab1d167a4fb2f3da13978b997029c9b5e6164d33c747fc7ec542", size = 637168, upload-time = "2025-12-23T15:23:59.667Z" },
@@ -708,7 +732,7 @@ name = "python-dateutil"
 version = "2.9.0.post0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "six" },
+    { name = "six", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/66/c0/0c8b6ad9f17a802ee498c46e004a0eb49bc148f2fd230864601a86dcf6db/python-dateutil-2.9.0.post0.tar.gz", hash = "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3", size = 342432, upload-time = "2024-03-01T18:36:20.211Z" }
 wheels = [
@@ -794,11 +818,11 @@ name = "trame"
 version = "3.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pyyaml" },
-    { name = "trame-client" },
-    { name = "trame-common" },
-    { name = "trame-server" },
-    { name = "wslink" },
+    { name = "pyyaml", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "trame-client", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "trame-common", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "trame-server", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "wslink", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/35/ac/ebd44ac237841d131314e41e0b1654926b77517b0553d7a7f4227778db07/trame-3.12.0.tar.gz", hash = "sha256:88b861162cb8b025e84e93f17dcfd43a84d02d2c1608c9f6d58e3cd646a50c05", size = 23493, upload-time = "2025-08-18T20:21:40.655Z" }
 wheels = [
@@ -810,7 +834,7 @@ name = "trame-client"
 version = "3.11.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "trame-common" },
+    { name = "trame-common", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ae/a5/febe01d66c7524882c5f4f3e75affbf112896b660a8a53ddc505eeaa57f7/trame_client-3.11.2.tar.gz", hash = "sha256:98b3f09d0fbdb09cd29eac61c945a76dcad4a08cfb4843abce5a148fd6fc7316", size = 240877, upload-time = "2025-10-08T16:09:56.837Z" }
 wheels = [
@@ -831,8 +855,8 @@ name = "trame-server"
 version = "3.10.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "more-itertools" },
-    { name = "wslink" },
+    { name = "more-itertools", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "wslink", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/52/54/e5a974c09f94bd795c20c311405ffa132f189ac609211305552d238a46ad/trame_server-3.10.0.tar.gz", hash = "sha256:0c341de976f758ff8e6076991e7f30be180384d4f386cf29aefa3915b801d118", size = 39765, upload-time = "2026-01-13T23:22:34.653Z" }
 wheels = [
@@ -844,7 +868,7 @@ name = "trame-vtk"
 version = "2.11.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "trame-client" },
+    { name = "trame-client", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b6/58/c08b8e761861f186e69894a915f30f3a361d539ad70d4cb27efe6a71b41e/trame_vtk-2.11.1.tar.gz", hash = "sha256:db1f316ba69c29b9292775c3f73567604aa366742c06030d8507d5bd56424492", size = 518636, upload-time = "2026-02-05T17:06:18.845Z" }
 wheels = [
@@ -923,7 +947,7 @@ name = "vtk"
 version = "9.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "matplotlib" },
+    { name = "matplotlib", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6f/ba/1571d61013f3f5778c11741d5de19db197b437d1a52215560f016662597b/vtk-9.3.1-cp312-cp312-macosx_10_10_x86_64.whl", hash = "sha256:05a4b6e387a906e8c8d6844441f9200116e937069fcf81f43e2600f26eb046de", size = 76832738, upload-time = "2024-06-29T03:15:26.41Z" },
@@ -988,8 +1012,8 @@ name = "wslink"
 version = "2.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "aiohttp" },
-    { name = "msgpack" },
+    { name = "aiohttp", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "msgpack", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/06/28/7c7cf32d544f464b58f14b8b9da2acfd382729c8c2074abe0dfe671361fc/wslink-2.5.0.tar.gz", hash = "sha256:61f79460affeeeb05284821f5ec5bc927153d587b661d6cfe33cbe260f9cfae3", size = 31996, upload-time = "2025-10-20T15:38:53.161Z" }
 wheels = [
@@ -1001,9 +1025,9 @@ name = "yarl"
 version = "1.22.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "idna" },
-    { name = "multidict" },
-    { name = "propcache" },
+    { name = "idna", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "multidict", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "propcache", marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/57/63/0c6ebca57330cd313f6102b16dd57ffaf3ec4c83403dcb45dbd15c6f3ea1/yarl-1.22.0.tar.gz", hash = "sha256:bebf8557577d4401ba8bd9ff33906f1376c877aa78d1fe216ad01b4d6745af71", size = 187169, upload-time = "2025-10-06T14:12:55.963Z" }
 wheels = [
