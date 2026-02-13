@@ -16,7 +16,15 @@ def test_execute_run_creates_artifact_and_is_deterministic(tmp_path: Path) -> No
     try:
         executor.ARTIFACTS_ROOT = tmp_path / "artifacts"
 
-        request = RunRequest(code="result = 1", params={"a": 1})
+        code = """
+import cadquery as cq
+
+def build(params):
+    size = float(params.get("size", 10.0))
+    return cq.Workplane("XY").box(size, size, size).val()
+"""
+
+        request = RunRequest(code=code, params={"size": 10.0})
         response1 = executor.execute_run(request)
         response2 = executor.execute_run(request)
 
