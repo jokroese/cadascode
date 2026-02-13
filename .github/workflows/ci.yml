@@ -41,3 +41,9 @@ jobs:
           uv run pyright
           uv run pytest
 
+      - name: Build API Docker image
+        run: docker build -t cadascode-api:ci ./apps/api
+
+      - name: Build Web Docker image
+        run: docker build -t cadascode-web:ci -f apps/web/Dockerfile .
+
