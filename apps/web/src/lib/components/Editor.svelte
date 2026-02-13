@@ -2,7 +2,20 @@
 
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import '$lib/monaco/bootstrap';
+
+	const defaultSnippet = [
+		"import cadquery as cq",
+		"",
+		"def build(params):",
+		"    size = float(params.get('size', 10.0))",
+		"    return cq.Workplane('XY').box(size, size, size).val()",
+		""
+	].join('\n');
+
+	const props = $props<{
+		initialCode?: string;
+		onChange?: (value: string) => void;
+	}>();
 
 	let el: HTMLDivElement;
 	let editor: import('monaco-editor').editor.IStandaloneCodeEditor | null = null;
@@ -11,19 +24,26 @@
 		let disposed = false;
 
 		(async () => {
+			// Monaco worker wiring must only run in the browser.
+			await import('$lib/monaco/bootstrap');
+
 			const monaco = await import('monaco-editor');
 			if (disposed) return;
 
 			editor = monaco.editor.create(el, {
-				value: 'import cadquery as cq\\n\\nresult = cq.Workplane(\"XY\").box(10, 10, 10)\\n',
+				value: props.initialCode ?? defaultSnippet,
 				language: 'python',
 				theme: 'vs-dark',
 				automaticLayout: true,
 				fontSize: 14,
 				minimap: { enabled: false }
 			});
-			// Basic example: prove that TS worker wiring works
-			console.log('Monaco editor ready');
+
+			editor.onDidChangeModelContent(() => {
+				if (!editor) return;
+				const value = editor.getValue();
+				props.onChange?.(value);
+			});
 		})();
 
 		return () => {
