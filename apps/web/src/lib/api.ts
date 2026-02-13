@@ -31,3 +31,25 @@ export async function runCadQuery(input: {
 	return data;
 }
 
+export interface FormatResponse {
+	formatted: string;
+}
+
+export async function formatCode(code: string): Promise<string> {
+	const res = await fetch('/api/format', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({ code })
+	});
+
+	if (!res.ok) {
+		const errorText = await res.text();
+		throw new Error(`Format failed: ${errorText}`);
+	}
+
+	const data = (await res.json()) as FormatResponse;
+	return data.formatted;
+}
+

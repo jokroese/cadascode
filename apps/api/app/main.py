@@ -4,7 +4,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
 from .executor import artifact_path_for, execute_run
-from .models import RunRequest, RunResponse
+from .formatter import FormatError, format_code
+from .models import FormatRequest, FormatResponse, RunRequest, RunResponse
 
 app = FastAPI(title="Cadascode API", version="0.1.0")
 
@@ -33,3 +34,18 @@ def get_artifact_glb(run_id: str) -> FileResponse:
         raise HTTPException(status_code=404, detail="Artifact not found")
 
     return FileResponse(path, media_type="model/gltf-binary", filename="model.glb")
+
+
+@app.post("/api/format", response_model=FormatResponse)
+def format_python_code(request: FormatRequest) -> FormatResponse:
+    """
+    Format Python code using ruff.
+
+    Pure endpoint: no filesystem writes, no caching, no side effects.
+    Returns formatted code string.
+    """
+    try:
+        formatted = format_code(request.code)
+        return FormatResponse(formatted=formatted)
+    except FormatError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc

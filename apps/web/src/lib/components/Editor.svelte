@@ -28,6 +28,7 @@
 			await import('$lib/monaco/bootstrap');
 
 			const monaco = await import('monaco-editor');
+			const { formatCode } = await import('$lib/api');
 			if (disposed) return;
 
 			editor = monaco.editor.create(el, {
@@ -44,6 +45,23 @@
 				const value = editor.getValue();
 				props.onChange?.(value);
 			});
+
+			// Wire Monaco's format action (Shift+Alt+F / Shift+Option+F) to call our /api/format endpoint
+			editor.addCommand(
+				monaco.KeyMod.Shift | monaco.KeyMod.Alt | monaco.KeyCode.KeyF,
+				async () => {
+					if (!editor) return;
+					const currentValue = editor.getValue();
+					try {
+						const formatted = await formatCode(currentValue);
+						editor.setValue(formatted);
+						props.onChange?.(formatted);
+					} catch (error) {
+						// eslint-disable-next-line no-console
+						console.error('Format failed:', error);
+					}
+				}
+			);
 		})();
 
 		return () => {
