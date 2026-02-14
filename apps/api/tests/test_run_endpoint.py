@@ -39,4 +39,3 @@ def build(params):
         assert data[:4] == b"glTF"
     finally:
         executor.ARTIFACTS_ROOT = original_root
-

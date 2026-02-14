@@ -90,4 +90,3 @@ def export_glb_from_shape(shape: Any, path: Path) -> None:
     ok = writer.Perform(doc, file_info, progress)
     if not ok or not out.is_file() or out.stat().st_size == 0:
         raise ExportError("RWGltf_CafWriter failed to write a valid .glb file.")
-

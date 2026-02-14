@@ -53,4 +53,3 @@ class FormatResponse(BaseModel):
     """Response payload for code formatting."""
 
     formatted: str = Field(..., description="Formatted code string.")
-
