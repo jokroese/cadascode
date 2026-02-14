@@ -32,16 +32,8 @@ jobs:
           restore-keys: |
             pnpm-${{ runner.os }}-
 
-      - name: Debug pnpm production mode
-        run: |
-          echo "NODE_ENV=$NODE_ENV"
-          mise x -- pnpm config get production || true
-
       - name: Install JS dependencies
-        run: mise x -- pnpm -w install --frozen-lockfile
-
-      - name: Sanity check (SvelteKit CLI present)
-        run: mise x -- pnpm --filter web exec svelte-kit --version
+        run: mise x -- pnpm install --frozen-lockfile
 
       - name: JS checks
         run: |
