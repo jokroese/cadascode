@@ -40,31 +40,52 @@ def _ensure_artifact_dir(run_id: str) -> Path:
     return directory
 
 
-def _build_shape_from_params(params: Mapping[str, Any]) -> Any:
+def _execute_user_build(code: str, params: Mapping[str, Any]) -> Any:
     """
-    Temporary hard-coded CadQuery model for v0 CadQuery → viewer wiring.
+    Execute user-provided CadQuery code and return the result of build(params).
 
-    This will be replaced in a later step by executing user-provided CadQuery
-    code (via a build(params) function) once Monaco is wired in.
+    Contract:
+    - User code must define a callable `build(params)` function.
+    - `params` is the same mapping used for run_id computation.
+    - `build` must return a CadQuery shape object (e.g. cq.Shape, Workplane.val())
+      that `export_glb_from_shape` can handle.
     """
     import cadquery as cq
 
-    size = float(params.get("size", 10.0))
-    # Numeric values are treated as millimetres end-to-end.
-    wp = cq.Workplane("XY").box(size, size, size)
-    return wp.val()
+    # Provide a minimal, explicit global namespace for execution.
+    exec_globals: dict[str, Any] = {
+        "__builtins__": __builtins__,  # noqa: A001 - deliberate exposure for now
+        "cq": cq,
+        "cadquery": cq,
+    }
+    exec_locals: dict[str, Any] = {}
+
+    try:
+        compiled = compile(code, "<user_code>", "exec")
+    except SyntaxError as exc:  # Let caller classify as "syntax" error.
+        raise exc
+
+    exec(compiled, exec_globals, exec_locals)
+
+    # Merge namespaces to look up build() regardless of where it was defined.
+    namespace: dict[str, Any] = {**exec_globals, **exec_locals}
+    build = namespace.get("build")
+    if not callable(build):
+        raise RuntimeError("Expected a callable build(params) function in user code.")
+
+    return build(params)
 
 
 def execute_run(request: RunRequest) -> RunResponse:
     """
     Execute a CadQuery run request.
 
-    Phase 3a implementation:
-    - Computes deterministic run_id.
-    - If artifact exists, short-circuits.
-    - Otherwise, builds a hard-coded CadQuery model and exports it to GLB
-      using OCCT's RWGltf_CafWriter, producing exactly one artefact:
-      'model.glb'.
+    Behaviour:
+    - Computes deterministic run_id (code + stable(params)).
+    - If artefact exists, returns it (cache hit).
+    - Otherwise, executes user-provided CadQuery code and expects a
+      `build(params)` function to return a shape that can be exported
+      via OCCT to a single GLB artefact: 'model.glb'.
     """
     run_id = _compute_run_id(request.code, request.params)
     artifact_path = artifact_path_for(run_id)
@@ -78,13 +99,23 @@ def execute_run(request: RunRequest) -> RunResponse:
             )
 
         _ensure_artifact_dir(run_id)
-        shape = _build_shape_from_params(request.params)
+        shape = _execute_user_build(request.code, request.params)
         export_glb_from_shape(shape=shape, path=artifact_path)
 
         return RunResponse(
             run_id=run_id,
             status="ok",
             glb_url=f"/api/artifacts/{run_id}/model.glb",
+        )
+    except SyntaxError as exc:
+        return RunResponse(
+            run_id=run_id,
+            status="error",
+            error=ErrorInfo(
+                type="syntax",
+                message=str(exc),
+                traceback=None,
+            ),
         )
     except ExportError as exc:
         return RunResponse(

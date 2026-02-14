@@ -42,3 +42,14 @@ class RunResponse(BaseModel):
         description="Error details when status == 'error'.",
     )
 
+
+class FormatRequest(BaseModel):
+    """Request payload for formatting Python code."""
+
+    code: str = Field(..., description="Python code to format.")
+
+
+class FormatResponse(BaseModel):
+    """Response payload for code formatting."""
+
+    formatted: str = Field(..., description="Formatted code string.")

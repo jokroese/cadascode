@@ -1,3 +1,2 @@
 class Message_ProgressRange:
     def __init__(self) -> None: ...
-

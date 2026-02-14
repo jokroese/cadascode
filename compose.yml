@@ -25,15 +25,10 @@ services:
       - "8000:8000"
     volumes:
       - ./apps/api:/app
-      - api_venv:/app/.venv
-      - uv_cache:/app/.cache/uv
     environment:
       - PYTHONUNBUFFERED=1
-      - UV_CACHE_DIR=/app/.cache/uv
 
 volumes:
   web_root_node_modules:
   web_app_node_modules:
   web_pnpm_store:
-  api_venv:
-  uv_cache:
