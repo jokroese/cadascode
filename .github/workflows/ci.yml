@@ -32,34 +32,18 @@ jobs:
           restore-keys: |
             pnpm-${{ runner.os }}-
 
-      - name: Debug production-mode inputs
+      - name: Debug pnpm production mode
         run: |
           echo "NODE_ENV=$NODE_ENV"
-          echo "NPM_CONFIG_PRODUCTION=$NPM_CONFIG_PRODUCTION"
-          echo "npm_config_production=$npm_config_production"
           mise x -- pnpm config get production || true
-          mise x -- pnpm -C apps/web ls @sveltejs/kit || true
-          ls -la apps/web/node_modules/.bin 2>/dev/null || true
 
       - name: Install JS dependencies
-        env:
-          NODE_ENV: development
-          NPM_CONFIG_PRODUCTION: "false"
-          npm_config_production: "false"
-        run: mise x -- pnpm -w install --frozen-lockfile --prod=false
+        run: mise x -- pnpm -w install --frozen-lockfile
 
       - name: Sanity check (SvelteKit CLI present)
-        env:
-          NODE_ENV: development
-          NPM_CONFIG_PRODUCTION: "false"
-          npm_config_production: "false"
         run: mise x -- pnpm --filter web exec svelte-kit --version
 
       - name: JS checks
-        env:
-          NODE_ENV: development
-          NPM_CONFIG_PRODUCTION: "false"
-          npm_config_production: "false"
         run: |
           mise x -- pnpm -w run check
           mise x -- pnpm -w run typecheck
