@@ -40,22 +40,6 @@ def _ensure_artifact_dir(run_id: str) -> Path:
     return directory
 
 
-def _build_shape_from_params(params: Mapping[str, Any]) -> Any:
-    """
-    Temporary helper kept for reference and potential fallback:
-    builds a simple CadQuery box from parameters.
-
-    Newer phases execute user-provided CadQuery code instead; see
-    `_execute_user_build`.
-    """
-    import cadquery as cq
-
-    size = float(params.get("size", 10.0))
-    # Numeric values are treated as millimetres end-to-end.
-    wp = cq.Workplane("XY").box(size, size, size)
-    return wp.val()
-
-
 def _execute_user_build(code: str, params: Mapping[str, Any]) -> Any:
     """
     Execute user-provided CadQuery code and return the result of build(params).
