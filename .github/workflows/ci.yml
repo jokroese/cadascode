@@ -14,20 +14,38 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install mise
-        uses: jdx/mise-action@v2
+      - name: Install mise (with cache)
+        uses: jdx/mise-action@v3
+        with:
+          install: true
+          cache: true
 
-      - name: Install Node and Python via mise
-        run: mise install
+      - name: Get pnpm store path
+        id: pnpm-store
+        run: echo "path=$(mise x -- pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-${{ runner.os }}-
 
       - name: Install JS dependencies
-        run: pnpm -w install --frozen-lockfile
+        run: mise x -- pnpm -w install --frozen-lockfile
+
+      - name: Sanity check (SvelteKit CLI present)
+        run: mise x -- pnpm --filter web exec svelte-kit --version
 
       - name: JS checks
         run: |
-          pnpm -w run check
-          pnpm -w run typecheck
-          pnpm -w run test
+          mise x -- pnpm -w run check
+          mise x -- pnpm -w run typecheck
+          mise x -- pnpm -w run test
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
       - name: Install Python dependencies
         working-directory: apps/api
@@ -46,4 +64,3 @@ jobs:
 
       - name: Build Web Docker image
         run: docker build -t cadascode-web:ci -f apps/web/Dockerfile .
-
